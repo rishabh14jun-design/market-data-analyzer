@@ -1,0 +1,90 @@
+import requests
+import pandas as pd
+import sys
+
+API_KEY = "FGT563EWASDNCIWX"
+
+
+def search_symbol(keyword):
+    url = "https://www.alphavantage.co/query"
+    params = {
+        "function": "SYMBOL_SEARCH",
+        "keywords": keyword,
+        "apikey": API_KEY
+    }
+    data = requests.get(url, params=params).json()
+
+    if "bestMatches" not in data:
+        print("No matches found")
+        return []
+
+    return [{
+        "symbol": i["1. symbol"],
+        "name": i["2. name"],
+        "region": i["4. region"],
+        "score": float(i["9. matchScore"])
+    } for i in data["bestMatches"]]
+
+
+def fetch_daily_prices(symbol):
+    url = "https://www.alphavantage.co/query"
+    params = {
+        "function": "TIME_SERIES_DAILY",
+        "symbol": symbol,
+        "outputsize": "compact",
+        "apikey": API_KEY
+    }
+    data = requests.get(url, params=params).json()
+
+    if "Time Series (Daily)" not in data:
+        raise ValueError(data)
+
+    df = pd.DataFrame.from_dict(data["Time Series (Daily)"], orient="index")
+    df.rename(columns={
+        "1. open": "Open",
+        "2. high": "High",
+        "3. low": "Low",
+        "4. close": "Close",
+        "5. volume": "Volume"
+    }, inplace=True)
+
+    df = df[["Open", "High", "Low", "Close", "Volume"]].astype(float)
+    df.index = pd.to_datetime(df.index)
+    df.sort_index(inplace=True)
+    return df
+
+
+def main():
+    if len(sys.argv) < 3:
+        print("Usage:")
+        print("  python alpha_test_ibm.py search <KEYWORD>")
+        print("  python alpha_test_ibm.py fetch <SYMBOL>")
+        sys.exit(1)
+
+    action = sys.argv[1].lower()
+    value = sys.argv[2].upper()
+
+    if action == "search":
+        results = search_symbol(value)
+        for r in results:
+            print(f"{r['symbol']:10} | {r['name'][:40]:40} | {r['region']:15} | score={r['score']}")
+
+    elif action == "fetch":
+        df = fetch_daily_prices(value)
+        df = df.tail(22)
+
+        df["Daily Return %"] = df["Close"].pct_change() * 100
+        df["MA_5"] = df["Close"].rolling(5).mean()
+        df["MA_10"] = df["Close"].rolling(10).mean()
+
+        out = f"stock_app/{value}_alpha_1month.csv"
+        df.to_csv(out)
+        print(f"Saved {out}")
+        print(df.tail())
+
+    else:
+        print("Invalid action")
+
+
+if __name__ == "__main__":
+    main()
