@@ -126,6 +126,7 @@ def main():
         today = pd.Timestamp.today().date()
         print(f"todays timestamp: {today}")
         weekday = pd.Timestamp.today().weekday()
+        print(f"Weekday: {weekday}")
 
         if weekday == 5:          # Saturday
           expected_date = today - pd.Timedelta(days=1)
