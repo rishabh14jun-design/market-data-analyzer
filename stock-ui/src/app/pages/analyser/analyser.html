@@ -1,0 +1,16 @@
+<h2>Stock Analyzer</h2>
+
+<input
+  type="text"
+  placeholder="Enter symbol (IBM)"
+  [(ngModel)]="symbol"
+/>
+
+<button (click)="analyze()">Analyze</button>
+
+<p *ngIf="loading">Loading...</p>
+<p *ngIf="error" style="color:red">{{ error }}</p>
+
+<pre *ngIf="result">
+{{ result | json }}
+</pre>
