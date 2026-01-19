@@ -2,13 +2,28 @@
 
 <input
   type="text"
-  placeholder="Enter symbol (IBM)"
+  placeholder="Enter symbol or company name"
   [(ngModel)]="symbol"
 />
 
+<br /><br />
+
+<button (click)="search()">Search</button>
 <button (click)="analyze()">Analyze</button>
 
-<p *ngIf="loading">Loading...</p>
+<p *ngIf="searching">Searching...</p>
+
+<ul *ngIf="searchResults.length">
+  <li
+    *ngFor="let r of searchResults"
+    (click)="selectSymbol(r.symbol)"
+    style="cursor:pointer"
+  >
+    <b>{{ r.symbol }}</b> — {{ r.name }} ({{ r.region }})
+  </li>
+</ul>
+
+<p *ngIf="loading">Analyzing...</p>
 <p *ngIf="error" style="color:red">{{ error }}</p>
 
 <pre *ngIf="result">

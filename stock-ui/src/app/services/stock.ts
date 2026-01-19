@@ -15,4 +15,10 @@ export class StockService {
       `${this.apiUrl}/analyze?symbol=${symbol}`
     );
   }
+
+  search(query: string) {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/search?q=${query}`
+    );
+  }
 }
